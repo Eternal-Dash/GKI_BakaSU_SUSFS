@@ -1600,6 +1600,28 @@ jobs:
 
           cp "$SRC_DIR/Image" ./
 
+      # ==================== 应用 KPM 补丁 ====================
+      - name: 应用 KPM 补丁 (KernelPatch)
+        run: |
+          set -euo pipefail
+          echo "--- KPM 打补丁前 ---"
+          ls -l Image
+
+          curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
+          chmod +x patch_linux
+          ./patch_linux
+
+          echo "--- KPM 打补丁后 ---"
+          ls -l Image oImage
+          rm -rf Image && mv oImage Image
+
+          if strings Image | grep -q KernelPatch; then
+            echo "KPM-OK: KernelPatch 已在 Image 中"
+          else
+            echo "::error::KPM 未生效（Image 内没有 KernelPatch 标志）"
+            exit 1
+          fi
+
       # ==================== 激活 Bypass 构建 ====================
       # Bypass 只放宽内核模块版本校验，普通 Image 始终保留为默认产物。
       - name: 激活 Bypass 内核补丁
